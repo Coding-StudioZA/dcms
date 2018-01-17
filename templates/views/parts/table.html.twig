@@ -1,0 +1,11 @@
+<table>
+    <tr>
+        <th>Nr Ewidencyjny</th><th>Nr Kontrahenta</th><th>Nr Dokumentu</th><th>Termin Zapłaty</th><th>Kwota</th><th>Stan</th><th>Notatki</th>
+    </tr>
+    {% for value in lista %}
+        <tr>
+            <td>{{ value.nrewidencyjny }}</td><td>{{ value.nrkontrahenta }}</td><td>{{ value.nrdokumentu }}</td><td>{{ value.terminzaplaty|date('d-m-Y') }}</td><td>{{ value.kwota }}</td><td>{{ value.stan }}</td><td>{{ value.notatki }}</td>
+        </tr>
+    {% endfor %}
+
+</table>

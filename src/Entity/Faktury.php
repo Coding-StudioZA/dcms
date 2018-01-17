@@ -163,5 +163,13 @@ class Faktury
         $this->nr_kontrahenta = $nr_kontrahenta;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getId()
+    {
+        return $this->id;
+    }
+
 
 }

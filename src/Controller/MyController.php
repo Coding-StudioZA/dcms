@@ -5,29 +5,54 @@ namespace App\Controller;
 use App\Entity\Faktury;
 use App\Entity\Firmy;
 use App\Entity\Kontakty;
+use App\Form\Lista;
+use App\Service\MyService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+
 
 class MyController extends Controller
 {
     /**
-     * @Route("/", name="lista_faktur")
+     * @Route("/{id}", name="lista_faktur")
      */
-    public function index()
+    public function listaFaktur($id = null, MyService $myService, Request $request)
     {
-        $stany = ['Nie zapłacona', 'Windykowana', 'U Prawnika', 'Zapłacona', 'Sprawa Sporna'];
+        if($id){
 
-        $dbResponse = $this->getDoctrine()->getManager()->getRepository(Faktury::class)->findAll();
+            $dbResponse = $this->getDoctrine()->getRepository(Faktury::class)->find($id);
 
-        foreach($dbResponse as $format) {
-            $format->setStan($stany[$format->getStan()]);
+            $form = $this->createForm(Lista::class, $dbResponse);
+
+            $form->handleRequest($request);
+
+            if ($form->isSubmitted() && $form->isValid()) {
+
+                $task = $form->getData();
+
+                $em = $this->getDoctrine()->getManager();
+                $em->persist($task);
+                $em->flush();
+
+                return $this->redirectToRoute('lista_faktur');
+            }
+
+            return $this->render('views/edit.html.twig', [ 'form' => $form->createView() ]);
+
         }
-        
-        $debug = "dobrze";
+        else {
 
-        return $this->render('views/lista.html.twig', [ 'lista' => $dbResponse, 'debug' => $debug ]);
+            $dbResponse = $this->getDoctrine()->getRepository(Faktury::class)->findAll();
+
+            $dbResponse = $myService->formatStatesResponse($dbResponse);
+
+            return $this->render('views/list.html.twig', ['faktury' => $dbResponse]);
+        }
     }
 
 }

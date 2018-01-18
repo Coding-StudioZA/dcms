@@ -13,6 +13,13 @@ class FakturyRepository extends ServiceEntityRepository
         parent::__construct($registry, Faktury::class);
     }
 
+    public function unpaidInvoices($id){
+        return $this->createQueryBuilder('invoice')
+            ->where('invoice.stan != 3')
+            ->andWhere('invoice.nr_kontrahenta = :id')->setParameter('id', $id)
+            ->getQuery()
+            ->getResult();
+    }
     /*
     public function findBySomething($value)
     {

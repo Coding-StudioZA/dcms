@@ -1,13 +1,10 @@
 <table>
     <tr>
-        <th>Nr Ewidencyjny</th><th>Nr Kontrahenta</th><th>Nr Dokumentu</th><th>Termin Zapłaty</th><th>Kwota</th><th>Stan</th><th></th><th>Notatki</th>
+        <th>Nr Ewidencyjny</th><th>Nr Kontrahenta</th><th>Nr Dokumentu</th><th>Termin Zapłaty</th><th>Kwota</th><th>Stan</th><th></th><th></th><th>Notatki</th>
     </tr>
     {% for faktura in faktury %}
         <tr>
-            <td>{{ faktura.nrewidencyjny }}</td><td>{{ faktura.nrkontrahenta }}</td><td>{{ faktura.nrdokumentu }}</td><td>{{ faktura.terminzaplaty|date('d-m-Y') }}</td><td>{{ faktura.kwota }}</td><td>{{ faktura.stan }}</td><td><a href="{{ path('lista_faktur', {'id' : faktura.id}) }}">Edytuj</a></td><td>{{ faktura.notatki }}</td>
+            <td>{{ faktura.nrewidencyjny }}</td><td>{{ faktura.nrkontrahenta }}</td><td>{{ faktura.nrdokumentu }}</td><td>{{ faktura.terminzaplaty|date('d-m-Y') }}</td><td>{{ faktura.kwota }}</td><td>{{ faktura.stan }}</td><td><a href="{{ path('lista_faktur', {'id' : faktura.id}) }}">Edytuj</a></td><td><a href="{{ path('compose_email', {'id' : faktura.nrkontrahenta}) }}">Mail</a></td><td>{{ faktura.notatki }}</td>
         </tr>
     {% endfor %}
-
-
-
 </table>

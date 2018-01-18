@@ -1,0 +1,13 @@
+<table>
+    <tr>
+        <th>Nr Dokumentu</th><th>Termin Zapłaty</th><th>Kwota</th><th>Stan</th>
+    </tr>
+    {% for faktura in faktury %}
+        <tr>
+            <td>{{ faktura.nrdokumentu }}</td><td>{{ faktura.terminzaplaty|date('d-m-Y') }}</td><td>{{ faktura.kwota }}</td><td>{{ faktura.stan }}</td>
+        </tr>
+    {% endfor %}
+
+
+
+</table>

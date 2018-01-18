@@ -12,7 +12,6 @@ class FirmyRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Firmy::class);
     }
-
     /*
     public function findBySomething($value)
     {

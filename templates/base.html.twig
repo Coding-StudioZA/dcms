@@ -7,7 +7,9 @@
     </head>
     <body>
     <nav>
-        <a href="{{ path('lista_faktur') }}">Home</a>
+        <a href="{{ path('invoices_list') }}">Strona Domowa</a>
+        <a href="{{ path('companies_list') }}">Edytuj firmę</a>
+        <a href="{{ path('import_invoices') }}">Importuj wiekowanie</a>
     </nav>
         {% block body %}{% endblock %}
         {% block javascripts %}{% endblock %}

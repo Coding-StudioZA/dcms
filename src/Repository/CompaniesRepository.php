@@ -2,23 +2,15 @@
 
 namespace App\Repository;
 
-use App\Entity\Faktury;
+use App\Entity\Companies;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Symfony\Bridge\Doctrine\RegistryInterface;
 
-class FakturyRepository extends ServiceEntityRepository
+class CompaniesRepository extends ServiceEntityRepository
 {
     public function __construct(RegistryInterface $registry)
     {
-        parent::__construct($registry, Faktury::class);
-    }
-
-    public function unpaidInvoices($id){
-        return $this->createQueryBuilder('invoice')
-            ->where('invoice.stan != 3')
-            ->andWhere('invoice.nr_kontrahenta = :id')->setParameter('id', $id)
-            ->getQuery()
-            ->getResult();
+        parent::__construct($registry, Companies::class);
     }
     /*
     public function findBySomething($value)

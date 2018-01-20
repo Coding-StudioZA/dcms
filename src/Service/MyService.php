@@ -15,7 +15,7 @@ class MyService
     {
         $stany = $this->getStateArray();
         foreach ($dbResponse as $format) {
-            $format->setStan($stany[$format->getStan()]);
+            $format->setState($stany[$format->getState()]);
         }
 
         return $dbResponse;

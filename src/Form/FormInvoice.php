@@ -9,13 +9,13 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 
 
-class Lista extends AbstractType
+class FormInvoice extends AbstractType
 {
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('stan', ChoiceType::class, [
+            ->add('state', ChoiceType::class, [
                 'choices' => [
                     'Niezapłacona' => 0,
                     'Windykowana' => 1,
@@ -24,7 +24,7 @@ class Lista extends AbstractType
                     'Sprawa sporna' => 4,
                 ]
             ])
-            ->add('notatki', TextareaType::class, ['required' => false])
+            ->add('notes', TextareaType::class, ['required' => false])
             ->add('save', SubmitType::class, ['label' => 'Zapisz']);
     }
 

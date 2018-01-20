@@ -2,9 +2,10 @@
 
 namespace App\Controller;
 
-use App\Entity\Faktury;
-use App\Entity\Firmy;
-use App\Form\Lista;
+use App\Entity\Invoices;
+use App\Entity\Companies;
+use App\Form\FormInvoice;
+use App\Form\FormCompany;
 use App\Service\MyService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Psr\Log\LoggerInterface;
@@ -21,15 +22,15 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 class MyController extends Controller
 {
     /**
-     * @Route("/{id}", name="lista_faktur")
+     * @Route("/{id}", name="invoices_list", requirements={"id"="\d+"})
      */
     public function invoicesList($id = null, MyService $myService, Request $request)
     {
         if ($id) {
 
-            $dbresponse = $this->getDoctrine()->getRepository(Faktury::class)->find($id);
+            $dbresponse = $this->getDoctrine()->getRepository(Invoices::class)->find($id);
 
-            $form = $this->createForm(Lista::class, $dbresponse);
+            $form = $this->createForm(FormInvoice::class, $dbresponse);
 
             $form->handleRequest($request);
 
@@ -42,23 +43,62 @@ class MyController extends Controller
                 $em->persist($task);
                 $em->flush();
 
-                return $this->redirectToRoute('lista_faktur');
+                return $this->redirectToRoute('invoices_list');
             }
 
-            return $this->render('views/edit.html.twig', [
+            return $this->render('views/editForm.html.twig', [
                 'form' => $form->createView(),
                 ]);
 
         } else {
 
-            $dbresponse = $this->getDoctrine()->getRepository(Faktury::class)->findAll();
+            $dbresponse = $this->getDoctrine()->getRepository(Invoices::class)->findAll();
 
             $dbresponse = $myService->formatStatesResponse($dbresponse);
 
-            return $this->render('views/list.html.twig', [
-                'faktury' => $dbresponse,
+            return $this->render('views/listInvoices.html.twig', [
+                'invoices' => $dbresponse,
                 ]);
         }
+    }
+
+    /**
+     * @Route("/companies/{id}", name="companies_list")
+     */
+    public function editEntry($id = null, Request $request){
+        if ($id) {
+
+            $dbresponse = $this->getDoctrine()->getRepository(Companies::class)->find($id);
+
+            $form = $this->createForm(FormCompany::class, $dbresponse);
+
+            $form->handleRequest($request);
+
+            if ($form->isSubmitted() && $form->isValid()) {
+
+                $task = $form->getData();
+
+                // Znajdź sposób aby wrzucić to w repozytorium, potem.
+                $em = $this->getDoctrine()->getManager();
+                $em->persist($task);
+                $em->flush();
+
+                return $this->redirectToRoute('companies_list');
+            }
+
+            return $this->render('views/editForm.html.twig', [
+                'form' => $form->createView(),
+            ]);
+
+        } else {
+
+            $dbresponse = $this->getDoctrine()->getRepository(Companies::class)->findAll();
+
+            return $this->render('views/listCompanies.html.twig', [
+                'contractors' => $dbresponse,
+            ]);
+        }
+
     }
 
     /**
@@ -67,8 +107,8 @@ class MyController extends Controller
     public function createMail($id, MyService $myservice, Request $request, \Swift_Mailer $mailer, LoggerInterface $logger)
     {
         $doc = $this->getDoctrine();
-        $invoices = $doc->getRepository(Faktury::class)->unpaidInvoices($id);
-        $client = $doc->getRepository(Firmy::class)->findOneBy(['nr_kontrahenta' => $id]);
+        $invoices = $doc->getRepository(Invoices::class)->unpaidInvoices($id);
+        $client = $doc->getRepository(Companies::class)->findOneBy(['contractor_number' => $id]);
 
         $invoices = $myservice->formatStatesResponse($invoices);
 
@@ -95,15 +135,23 @@ class MyController extends Controller
 
             $mailer->send($message);
 
-            return $this->redirectToRoute('lista_faktur');
+            return $this->redirectToRoute('invoices_list');
 
         } else {
 
             return $this->render('/emails/paymentAdvice.html.twig', [
-                'faktury' => $invoices,
+                'invoices' => $invoices,
                 'form' => $form->createView(),
                 'link' => true,
             ]);
         }
+    }
+
+    /**
+     * @Route("/import", name="import_invoices")
+     */
+    public function import()
+    {
+        return new Response("blablablablack");
     }
 }

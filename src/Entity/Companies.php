@@ -5,9 +5,9 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity(repositoryClass="App\Repository\FirmyRepository")
+ * @ORM\Entity(repositoryClass="App\Repository\CompaniesRepository")
  */
-class Firmy
+class Companies
 {
     /**
      * @ORM\Id
@@ -19,27 +19,27 @@ class Firmy
     /**
      * @ORM\Column(type="string")
      */
-    private $nazwa;
+    private $company_name;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    private $imie;
+    private $name;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    private $nazwisko;
+    private $surname;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    private $telefon;
+    private $telephone;
 
     /**
      * @ORM\Column(type="string", nullable=true)
      */
-    private $komorka;
+    private $cellphone;
 
     /**
      * @ORM\Column(type="string", nullable=true)
@@ -49,7 +49,7 @@ class Firmy
     /**
      * @ORM\Column(type="integer")
      */
-    private $nr_kontrahenta;
+    private $contractor_number;
 
     /**
      * @return mixed
@@ -62,81 +62,81 @@ class Firmy
     /**
      * @return mixed
      */
-    public function getNazwa()
+    public function getCompanyName()
     {
-        return $this->nazwa;
+        return $this->company_name;
     }
 
     /**
-     * @param mixed $nazwa
+     * @param mixed $company_name
      */
-    public function setNazwa($nazwa): void
+    public function setCompanyName($company_name): void
     {
-        $this->nazwa = $nazwa;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getImie()
-    {
-        return $this->imie;
-    }
-
-    /**
-     * @param mixed $imie
-     */
-    public function setImie($imie): void
-    {
-        $this->imie = $imie;
+        $this->company_name = $company_name;
     }
 
     /**
      * @return mixed
      */
-    public function getNazwisko()
+    public function getName()
     {
-        return $this->nazwisko;
+        return $this->name;
     }
 
     /**
-     * @param mixed $nazwisko
+     * @param mixed $name
      */
-    public function setNazwisko($nazwisko): void
+    public function setName($name): void
     {
-        $this->nazwisko = $nazwisko;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getTelefon()
-    {
-        return $this->telefon;
-    }
-
-    /**
-     * @param mixed $telefon
-     */
-    public function setTelefon($telefon): void
-    {
-        $this->telefon = $telefon;
+        $this->name = $name;
     }
 
     /**
      * @return mixed
      */
-    public function getKomorka()
+    public function getSurname()
     {
-        return $this->komorka;
+        return $this->surname;
     }
 
     /**
-     * @param mixed $komorka
+     * @param mixed $surname
      */
-    public function setKomorka($komorka): void
+    public function setSurname($surname): void
     {
-        $this->komorka = $komorka;
+        $this->surname = $surname;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getTelephone()
+    {
+        return $this->telephone;
+    }
+
+    /**
+     * @param mixed $telephone
+     */
+    public function setTelephone($telephone): void
+    {
+        $this->telephone = $telephone;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCellphone()
+    {
+        return $this->cellphone;
+    }
+
+    /**
+     * @param mixed $cellphone
+     */
+    public function setCellphone($cellphone): void
+    {
+        $this->cellphone = $cellphone;
     }
 
     /**
@@ -158,18 +158,17 @@ class Firmy
     /**
      * @return mixed
      */
-    public function getNrKontrahenta()
+    public function getContractorNumber()
     {
-        return $this->nr_kontrahenta;
+        return $this->contractor_number;
     }
 
     /**
-     * @param mixed $nr_kontrahenta
+     * @param mixed $contractor_number
      */
-    public function setNrKontrahenta($nr_kontrahenta): void
+    public function setContractorNumber($contractor_number): void
     {
-        $this->nr_kontrahenta = $nr_kontrahenta;
+        $this->contractor_number = $contractor_number;
     }
-
 
 }

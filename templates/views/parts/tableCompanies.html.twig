@@ -1,0 +1,10 @@
+<table>
+    <tr>
+        <th>Nr Kontrahenta</th><th>Nazwa Firmy</th><th>Imię</th><th>Nazwisko</th><th>Telefon</th><th>Komórka</th><th>E-mail</th><th></th>
+    </tr>
+    {% for contractor in contractors %}
+        <tr>
+            <td>{{ contractor.contractornumber }}</td><td>{{ contractor.companyname }}</td><td>{{ contractor.name }}</td><td>{{ contractor.surname }}</td><td>{{ contractor.telephone }}</td><td>{{ contractor.cellphone }}</td><td>{{ contractor.email }}</td><td><a href="{{ path('invoices_list', {'id' : contractor.id}) }}">Edytuj</a></td>
+        </tr>
+    {% endfor %}
+</table>

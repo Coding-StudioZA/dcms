@@ -2,9 +2,9 @@
     <tr>
         <th>Nr Dokumentu</th><th>Termin Zapłaty</th><th>Kwota</th><th>Stan</th>
     </tr>
-    {% for faktura in faktury %}
+    {% for invoice in invoices %}
         <tr>
-            <td>{{ faktura.nrdokumentu }}</td><td>{{ faktura.terminzaplaty|date('d-m-Y') }}</td><td>{{ faktura.kwota }}</td><td>{{ faktura.stan }}</td>
+            <td>{{ invoice.invoicenumber }}</td><td>{{ invoice.duedate|date('d-m-Y') }}</td><td>{{ invoice.amount }}</td><td>{{ invoice.state }}</td>
         </tr>
     {% endfor %}
 

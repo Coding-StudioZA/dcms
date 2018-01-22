@@ -2,9 +2,23 @@
 
 namespace App\Service;
 
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use App\Entity\Invoices;
+use App\Entity\Companies;
+use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class MyService
 {
+    private $db;
+    private $logger;
+    private $dbm;
+
+    public function setUp($db, $logger = null)
+    {
+        $this->db = $db;
+        $this->logger = $logger;
+        $this->dbm = $db->getManager();
+    }
 
     private function getStateArray()
     {
@@ -21,6 +35,63 @@ class MyService
         return $dbResponse;
     }
 
+    public function spreadsheetToArray($filePath)
+    {
+        $inputFileType = IOFactory::identify($filePath);
+        $reader = IOFactory::createReader($inputFileType);
+        $reader->setReadDataOnly(true);
+        $spreadsheet = $reader->load($filePath);
+        $sheetData = $spreadsheet->getActiveSheet()->toArray(null,false,false,true);
 
+        $new = \PhpOffice\PhpSpreadsheet\Calculation\Functions::RETURNDATE_PHP_OBJECT;
+
+        return $sheetData;
+    }
+
+    public function saveToDatabase($dbObject)
+    {
+        $this->dbm->persist($dbObject);
+        $this->dbm->flush();
+
+        return true;
+    }
+
+    public function importAging($spreadsheet)
+    {
+        // Odczuwam tutaj wydajnościowy swąd... 2 zapytania do bazy dla przetwożenia JEDNEGO rekordu? WTF that shiet ugly Ok ale potem
+
+        $companies = $this->db->getRepository(Companies::class);
+        $invoices = $this->db->getRepository(Invoices::class);
+
+        foreach ($spreadsheet as $key => $value) {
+            if ($key != 1) {
+                if ($invoices->findBy(["evidence_number" => $value["D"]]) == []) {
+                    $dateTime = Date::excelToDateTimeObject($spreadsheet[$key]["C"], new \DateTimeZone("Europe/Warsaw"));
+                    $invoice = new Invoices();
+                    $invoice->setContractorNumber($value["A"]);
+                    $invoice->setDueDate($dateTime);
+                    $invoice->setEvidenceNumber($value["D"]);
+                    $invoice->setInvoiceNumber($value["E"]);
+                    $invoice->setAmount($value["O"]);
+                    $this->dbm->persist($invoice);
+                }
+            }
+        }
+        $this->dbm->flush();
+
+        foreach ($spreadsheet as $key => $value) {
+            if ($key != 1) {
+                if ($companies->findBy(["contractor_number" => $value["A"]]) == []) {
+                    $company = new Companies();
+                    $company->setCompanyName($value["B"]);
+                    $company->setContractorNumber($value["A"]);
+                    $this->dbm->persist($company);
+                }
+            }
+        }
+        $this->dbm->flush();
+
+        return true;
+    }
 
 }

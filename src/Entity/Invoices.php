@@ -37,9 +37,9 @@ class Invoices
     private $amount;
 
     /**
-     * @ORM\Column(type="smallint")
+     * @ORM\Column(type="smallint", options={"default": 0})
      */
-    private $state;
+    private $state = 0;
 
     /**
      * @ORM\Column(type="integer")

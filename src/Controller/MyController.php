@@ -2,21 +2,25 @@
 
 namespace App\Controller;
 
+use App\Entity\InvociesImport;
 use App\Entity\Invoices;
 use App\Entity\Companies;
 use App\Form\FormInvoice;
 use App\Form\FormCompany;
+use App\Form\InvoicesUpload;
 use App\Service\MyService;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use App\Service\FileUploader;
+use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\Cache\Simple\FilesystemCache;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 
 class MyController extends Controller
@@ -26,6 +30,8 @@ class MyController extends Controller
      */
     public function invoicesList($id = null, MyService $myService, Request $request)
     {
+        $myService->setUp($this->getDoctrine());
+
         if ($id) {
 
             $dbresponse = $this->getDoctrine()->getRepository(Invoices::class)->find($id);
@@ -38,10 +44,7 @@ class MyController extends Controller
 
                 $task = $form->getData();
 
-                // Znajdź sposób aby wrzucić to w repozytorium, potem.
-                $em = $this->getDoctrine()->getManager();
-                $em->persist($task);
-                $em->flush();
+                $myService->saveToDatabase($task);
 
                 return $this->redirectToRoute('invoices_list');
             }
@@ -104,13 +107,13 @@ class MyController extends Controller
     /**
      * @Route("/mail/{id}", name="compose_email")
      */
-    public function createMail($id, MyService $myservice, Request $request, \Swift_Mailer $mailer, LoggerInterface $logger)
+    public function createMail($id, MyService $myService, Request $request, \Swift_Mailer $mailer)
     {
         $doc = $this->getDoctrine();
         $invoices = $doc->getRepository(Invoices::class)->unpaidInvoices($id);
         $client = $doc->getRepository(Companies::class)->findOneBy(['contractor_number' => $id]);
 
-        $invoices = $myservice->formatStatesResponse($invoices);
+        $invoices = $myService->formatStatesResponse($invoices);
 
         $form = $this->createFormBuilder()
             ->add('notatki', HiddenType::class, ['data' => $id, 'disabled' => true])
@@ -150,8 +153,37 @@ class MyController extends Controller
     /**
      * @Route("/import", name="import_invoices")
      */
-    public function import()
+    public function import(Request $request, MyService $myService, LoggerInterface $logger)
     {
-        return new Response("blablablablack");
+        $import = new InvociesImport();
+        $myService->setUp($this->getDoctrine(), $logger);
+
+        $form = $this->createForm(InvoicesUpload::class, $import);
+
+        $form -> handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+
+            $file = $import->getAging();
+
+            $uploader = new FileUploader($this->getParameter('imports_dir'));
+            $import->setAging($uploader->upload($file));
+            $import->setImportTime(new \DateTime('now'));
+
+            $spreadsheet = $myService->spreadsheetToArray($this->getParameter('imports_dir')."/".$import->getAging());
+
+            $myService->saveToDatabase($import);
+
+            $cache = new FilesystemCache();
+            $cache->set('sheetarray', $spreadsheet);
+
+            $myService->importAging($spreadsheet);
+
+        }
+
+        return $this->render('views/editForm.html.twig', [
+            'form' => $form->createView(),
+        ]);
     }
+    
 }

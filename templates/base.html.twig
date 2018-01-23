@@ -11,7 +11,15 @@
         <a href="{{ path('companies_list') }}">Lista Firm</a>
         <a href="{{ path('import_invoices') }}">Importuj wiekowanie</a>
     </nav>
-        {% block body %}{% endblock %}
-        {% block javascripts %}{% endblock %}
+
+    {% for message in app.flashes('notice') %}
+        <div class="flash-notice">
+            {{ message }}
+        </div>
+    {% endfor %}
+
+    {% block body %}{% endblock %}
+    {% block javascripts %}{% endblock %}
+
     </body>
 </html>

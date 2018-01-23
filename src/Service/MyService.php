@@ -6,6 +6,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use App\Entity\Invoices;
 use App\Entity\Companies;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use Symfony\Component\HttpFoundation\Session\Session;
 
 class MyService
 {
@@ -62,6 +63,10 @@ class MyService
 
         $companies = $this->db->getRepository(Companies::class);
         $invoices = $this->db->getRepository(Invoices::class);
+        $today = new \DateTime("now");
+        $session = new Session();
+        $addedInvoices = 0;
+        $addedCompanies = 0;
 
         foreach ($spreadsheet as $key => $value) {
             if ($key != 1) {
@@ -73,7 +78,9 @@ class MyService
                     $invoice->setEvidenceNumber($value["D"]);
                     $invoice->setInvoiceNumber($value["E"]);
                     $invoice->setAmount($value["O"]);
+                    $invoice->setDueInterval(date_diff($dateTime, $today)->format("%a"));
                     $this->dbm->persist($invoice);
+                    $addedInvoices++;
                 }
             }
         }
@@ -86,12 +93,15 @@ class MyService
                     $company->setCompanyName($value["B"]);
                     $company->setContractorNumber($value["A"]);
                     $this->dbm->persist($company);
+                    $addedCompanies++;
                 }
             }
         }
         $this->dbm->flush();
 
-        return true;
+        $session->getFlashBag()->add("notice", "Dodano ".$addedInvoices." faktur oraz ".$addedCompanies." firm!");
+
+        return $addedInvoices+$addedCompanies;
     }
 
 }

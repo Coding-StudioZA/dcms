@@ -10,17 +10,18 @@ use App\Form\FormCompany;
 use App\Form\InvoicesUpload;
 use App\Service\MyService;
 use App\Service\FileUploader;
-use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\Cache\Simple\FilesystemCache;
+use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-
+use Symfony\Component\HttpFoundation\Session\Session;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 
 class MyController extends Controller
@@ -30,6 +31,7 @@ class MyController extends Controller
      */
     public function invoicesList($id = null, MyService $myService, Request $request)
     {
+        $session = new Session();
         $myService->setUp($this->getDoctrine());
 
         if ($id) {
@@ -46,11 +48,14 @@ class MyController extends Controller
 
                 $myService->saveToDatabase($task);
 
+                $session->getFlashBag()->add("notice", "Zmiany w ".$task->getInvoiceNumber()." zapisane!");
+
                 return $this->redirectToRoute('invoices_list');
             }
 
             return $this->render('views/editForm.html.twig', [
                 'form' => $form->createView(),
+                'title' => 'Edytuj',
                 ]);
 
         } else {
@@ -68,7 +73,11 @@ class MyController extends Controller
     /**
      * @Route("/companies/{id}", name="companies_list")
      */
-    public function editEntry($id = null, Request $request){
+    public function editEntry($id = null, MyService $myService, Request $request)
+    {
+        $session = new Session();
+        $myService->setUp($this->getDoctrine());
+
         if ($id) {
 
             $dbresponse = $this->getDoctrine()->getRepository(Companies::class)->find($id);
@@ -81,16 +90,16 @@ class MyController extends Controller
 
                 $task = $form->getData();
 
-                // Znajdź sposób aby wrzucić to w repozytorium, potem.
-                $em = $this->getDoctrine()->getManager();
-                $em->persist($task);
-                $em->flush();
+                $myService->saveToDatabase($task);
+
+                $session->getFlashBag()->add("notice", "Zmiany w ".$task->getCompanyName()." zapisane!");
 
                 return $this->redirectToRoute('companies_list');
             }
 
             return $this->render('views/editForm.html.twig', [
                 'form' => $form->createView(),
+                'title' => 'Edytuj firmę'
             ]);
 
         } else {
@@ -109,9 +118,9 @@ class MyController extends Controller
      */
     public function createMail($id, MyService $myService, Request $request, \Swift_Mailer $mailer)
     {
-        $doc = $this->getDoctrine();
-        $invoices = $doc->getRepository(Invoices::class)->unpaidInvoices($id);
-        $client = $doc->getRepository(Companies::class)->findOneBy(['contractor_number' => $id]);
+        $invoices = $this->getDoctrine()->getRepository(Invoices::class)->unpaidInvoices($id);
+        $client = $this->getDoctrine()->getRepository(Companies::class)->findOneBy(['contractor_number' => $id]);
+        $session = new Session();
 
         $invoices = $myService->formatStatesResponse($invoices);
 
@@ -123,20 +132,26 @@ class MyController extends Controller
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($client->getEmail() !== null) {
+                $message = (new \Swift_Message('Płać albo zgiń'))
+                    ->setFrom('kdWebDevelopment@kwb.pl')
+                    ->setTo($client->getEmail())
+                    ->setBody(
+                        $this->renderView('/emails/paymentAdvice.html.twig', [
+                            'invoices' => $invoices,
+                            'form' => $form->createView(),
+                            'link' => false,
+                        ]),
+                        'text/html'
+                    );
 
-            $message = (new \Swift_Message('Płać albo zgiń'))
-                ->setFrom('kdWebDevelopment@kwb.pl')
-                ->setTo($client->getEmail())
-                ->setBody(
-                    $this->renderView('/emails/paymentAdvice.html.twig', [
-                        'faktury' => $invoices,
-                        'form' => $form->createView(),
-                        'link' => false,
-                    ]),
-                    'text/html'
-                );
+                $mailer->send($message);
 
-            $mailer->send($message);
+                $session->getFlashBag()->add("notice", "Mail do " . $client->getCompanyName() . " wysłany!");
+
+            } else {
+                $session->getFlashBag()->add("notice", "Brak adresu e-mail do ". $client->getCompanyName());
+            }
 
             return $this->redirectToRoute('invoices_list');
 
@@ -167,23 +182,34 @@ class MyController extends Controller
             $file = $import->getAging();
 
             $uploader = new FileUploader($this->getParameter('imports_dir'));
+
             $import->setAging($uploader->upload($file));
             $import->setImportTime(new \DateTime('now'));
 
-            $spreadsheet = $myService->spreadsheetToArray($this->getParameter('imports_dir')."/".$import->getAging());
+            $filePath = $this->getParameter('imports_dir')."/".$import->getAging();
+            $spreadsheet = $myService->spreadsheetToArray($filePath);
 
-            $myService->saveToDatabase($import);
+            if ($myService->importAging($spreadsheet) == 0) {
+                $fs = new Filesystem();
+                $fs->remove($filePath);
+            } else {
+                $myService->saveToDatabase($import);
+            }
 
-            $cache = new FilesystemCache();
-            $cache->set('sheetarray', $spreadsheet);
-
-            $myService->importAging($spreadsheet);
-
+            return $this->redirectToRoute('invoices_list');
         }
 
         return $this->render('views/editForm.html.twig', [
             'form' => $form->createView(),
+            'title' => 'Importuj',
         ]);
     }
 
+    /**
+     * @Route("/test")
+     */
+    public function test(MyService $myService, LoggerInterface $logger, ValidatorInterface $validator){
+
+        return $this->render("base.html.twig");
+    }
 }

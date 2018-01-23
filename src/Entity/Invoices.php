@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\InvoicesRepository")
@@ -32,6 +33,12 @@ class Invoices
     private $due_date;
 
     /**
+     * @ORM\Column(type="smallint", options={"default": 0})
+     * @Assert\Range(min = 0, max = 4, minMessage = "Unknown range.", maxMessage = "Unknown range.")
+     */
+    private $due_interval = 0;
+
+    /**
      * @ORM\Column(type="float")
      */
     private $amount;
@@ -50,6 +57,22 @@ class Invoices
      * @ORM\Column(type="text", nullable=true)
      */
     private $notes;
+
+    /**
+     * @return mixed
+     */
+    public function getDueInterval()
+    {
+        return $this->due_interval;
+    }
+
+    /**
+     * @param mixed $due_interval
+     */
+    public function setDueInterval($due_interval): void
+    {
+        $this->due_interval = $due_interval;
+    }
 
     /**
      * @return mixed

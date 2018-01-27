@@ -34,7 +34,6 @@ class Invoices
 
     /**
      * @ORM\Column(type="smallint", options={"default": 0})
-     * @Assert\Range(min = 0, max = 4, minMessage = "Unknown range.", maxMessage = "Unknown range.")
      */
     private $due_interval = 0;
 
@@ -45,18 +44,36 @@ class Invoices
 
     /**
      * @ORM\Column(type="smallint", options={"default": 0})
+     * @Assert\Range(min = 0, max = 4, minMessage = "Unknown range.", maxMessage = "Unknown range.")
      */
     private $state = 0;
-
-    /**
-     * @ORM\Column(type="integer")
-     */
-    private $contractor_number;
 
     /**
      * @ORM\Column(type="text", nullable=true)
      */
     private $notes;
+
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Companies", inversedBy="invoices", fetch="EAGER")
+     * @ORM\JoinColumn(nullable=true)
+     */
+    private $contractor;
+
+    /**
+     * @return mixed
+     */
+    public function getContractor()
+    {
+        return $this->contractor;
+    }
+
+    /**
+     * @param mixed $contractor
+     */
+    public function setContractor($contractor): void
+    {
+        $this->contractor = $contractor;
+    }
 
     /**
      * @return mixed
@@ -160,22 +177,6 @@ class Invoices
     public function setState($state): void
     {
         $this->state = $state;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getContractorNumber()
-    {
-        return $this->contractor_number;
-    }
-
-    /**
-     * @param mixed $contractor_number
-     */
-    public function setContractorNumber($contractor_number): void
-    {
-        $this->contractor_number = $contractor_number;
     }
 
     /**

@@ -59,45 +59,64 @@ class MyService
 
     public function importAging($spreadsheet)
     {
-        // Odczuwam tutaj wydajnościowy swąd... 2 zapytania do bazy dla przetwożenia JEDNEGO rekordu? WTF that shiet ugly Ok ale potem
-
         $companies = $this->db->getRepository(Companies::class);
         $invoices = $this->db->getRepository(Invoices::class);
         $today = new \DateTime("now");
         $session = new Session();
         $addedInvoices = 0;
         $addedCompanies = 0;
+        $companiesTemp = [];
+        $batchSize = 50;
 
         foreach ($spreadsheet as $key => $value) {
+
             if ($key != 1) {
-                if ($companies->findBy(["contractor_number" => $value["A"]]) == []) {
+
+                if ($companies->findOneBy(["contractor_number" => $value["A"]]) == null && in_array($value["A"], $companiesTemp) == false) {
+
                     $company = new Companies();
                     $company->setCompanyName($value["B"]);
                     $company->setContractorNumber($value["A"]);
                     $this->dbm->persist($company);
+
                     $addedCompanies++;
+
+                    if (($addedCompanies % $batchSize) === 0) {
+                        $this->dbm->flush();
+                        $this->dbm->clear();
+                    }
                 }
+
+                $companiesTemp[] = $value["A"];
             }
         }
+
         $this->dbm->flush();
 
         foreach ($spreadsheet as $key => $value) {
-            if ($key != 1) {
-                if ($invoices->findBy(["evidence_number" => $value["D"]]) == []) {
-                    $dateTime = Date::excelToDateTimeObject($spreadsheet[$key]["C"], new \DateTimeZone("Europe/Warsaw"));
-                    $invoice = new Invoices();
-                    $invoice->setContractorNumber($value["A"]);
-                    $invoice->setDueDate($dateTime);
-                    $invoice->setEvidenceNumber($value["D"]);
-                    $invoice->setInvoiceNumber($value["E"]);
-                    $invoice->setAmount($value["O"]);
-                    $invoice->setDueInterval(date_diff($dateTime, $today)->format("%a"));
-                    $this->dbm->persist($invoice);
-                    $addedInvoices++;
+
+            if ($key != 1 && $invoices->findOneBy(["evidence_number" => $value["D"]]) == null) {
+
+                $dateTime = Date::excelToDateTimeObject($spreadsheet[$key]["C"], new \DateTimeZone("Europe/Warsaw"));
+                $invoice = new Invoices();
+                $invoice->setContractor($companies->findOneBy(["contractor_number" => $value["A"]]));
+                $invoice->setDueDate($dateTime);
+                $invoice->setEvidenceNumber($value["D"]);
+                $invoice->setInvoiceNumber($value["E"]);
+                $invoice->setAmount($value["O"]);
+                $invoice->setDueInterval(date_diff($dateTime, $today)->format("%a"));
+                $this->dbm->persist($invoice);
+
+                $addedInvoices++;
+
+                if (($addedInvoices % $batchSize) === 0) {
+                    $this->dbm->flush();
+                    $this->dbm->clear();
                 }
             }
         }
-        $this->dbm->flush();
+//        Flushuje mi zapisanie nazwy pliku excelowskiego do bazy.
+//        $this->dbm->flush();
 
         $session->getFlashBag()->add("notice", "Dodano ".$addedInvoices." faktur oraz ".$addedCompanies." firm!");
 

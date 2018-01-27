@@ -34,7 +34,6 @@ class Invoices
 
     /**
      * @ORM\Column(type="smallint", options={"default": 0})
-     * @Assert\Range(min = 0, max = 4, minMessage = "Unknown range.", maxMessage = "Unknown range.")
      */
     private $due_interval = 0;
 
@@ -45,6 +44,7 @@ class Invoices
 
     /**
      * @ORM\Column(type="smallint", options={"default": 0})
+     * @Assert\Range(min = 0, max = 4, minMessage = "Unknown range.", maxMessage = "Unknown range.")
      */
     private $state = 0;
 
@@ -54,7 +54,7 @@ class Invoices
     private $notes;
 
     /**
-     * @ORM\ManyToOne(targetEntity="App\Entity\Companies", inversedBy="invoices")
+     * @ORM\ManyToOne(targetEntity="App\Entity\Companies", inversedBy="invoices", fetch="EAGER")
      * @ORM\JoinColumn(nullable=true)
      */
     private $contractor;

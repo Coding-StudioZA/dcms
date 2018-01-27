@@ -15,8 +15,9 @@ class InvoicesRepository extends ServiceEntityRepository
 
     public function unpaidInvoices($id){
         return $this->createQueryBuilder('inv')
+            ->join('inv.contractor', 'cont')
             ->where('inv.state != 3')
-            ->andWhere('inv.contractor_number = :id')->setParameter('id', $id)
+            ->andWhere('cont.contractor_number = :id')->setParameter('id', $id)
             ->getQuery()
             ->getResult();
     }

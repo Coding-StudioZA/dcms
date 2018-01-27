@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\CompaniesRepository")
@@ -52,6 +54,24 @@ class Companies
      * @ORM\Column(type="integer")
      */
     private $contractor_number;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Invoices", mappedBy="contractor")
+     */
+    private $invoices;
+
+    public function __construct()
+    {
+        $this->invoices = new ArrayCollection();
+    }
+
+    /**
+     * @return Collection|Invoices[]
+     */
+    public function getProducts()
+    {
+        return $this->invoices;
+    }
 
     /**
      * @return mixed

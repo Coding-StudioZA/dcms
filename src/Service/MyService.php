@@ -70,6 +70,19 @@ class MyService
 
         foreach ($spreadsheet as $key => $value) {
             if ($key != 1) {
+                if ($companies->findBy(["contractor_number" => $value["A"]]) == []) {
+                    $company = new Companies();
+                    $company->setCompanyName($value["B"]);
+                    $company->setContractorNumber($value["A"]);
+                    $this->dbm->persist($company);
+                    $addedCompanies++;
+                }
+            }
+        }
+        $this->dbm->flush();
+
+        foreach ($spreadsheet as $key => $value) {
+            if ($key != 1) {
                 if ($invoices->findBy(["evidence_number" => $value["D"]]) == []) {
                     $dateTime = Date::excelToDateTimeObject($spreadsheet[$key]["C"], new \DateTimeZone("Europe/Warsaw"));
                     $invoice = new Invoices();
@@ -81,19 +94,6 @@ class MyService
                     $invoice->setDueInterval(date_diff($dateTime, $today)->format("%a"));
                     $this->dbm->persist($invoice);
                     $addedInvoices++;
-                }
-            }
-        }
-        $this->dbm->flush();
-
-        foreach ($spreadsheet as $key => $value) {
-            if ($key != 1) {
-                if ($companies->findBy(["contractor_number" => $value["A"]]) == []) {
-                    $company = new Companies();
-                    $company->setCompanyName($value["B"]);
-                    $company->setContractorNumber($value["A"]);
-                    $this->dbm->persist($company);
-                    $addedCompanies++;
                 }
             }
         }

@@ -4,7 +4,7 @@
     </tr>
     {% for invoice in invoices %}
         <tr>
-            <td>{{ invoice.evidencenumber }}</td><td>{{ invoice.contractornumber }}</td><td>{{ invoice.invoicenumber }}</td><td>{{ invoice.duedate|date('d-m-Y') }}</td><td>{{ invoice.dueinterval }}</td><td>{{ invoice.amount }}</td><td>{{ invoice.state }}</td><td><a href="{{ path('invoices_list', {'id' : invoice.id}) }}">Edytuj</a></td><td><a href="{{ path('compose_email', {'id' : invoice.contractornumber}) }}">Mail</a></td><td>{{ invoice.notes }}</td>
+            <td>{{ invoice.evidencenumber }}</td><td>{{ invoice.contractor.contractornumber }}</td><td>{{ invoice.invoicenumber }}</td><td>{{ invoice.duedate|date('d-m-Y') }}</td><td>{{ invoice.dueinterval }}</td><td>{{ invoice.amount }}</td><td>{{ invoice.state }}</td><td><a href="{{ path('invoices_list', {'id' : invoice.id}) }}">Edytuj</a></td><td><a href="{{ path('compose_email', {'id' : invoice.contractornumber}) }}">Mail</a></td><td>{{ invoice.notes }}</td>
         </tr>
     {% endfor %}
 </table>

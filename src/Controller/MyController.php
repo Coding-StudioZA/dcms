@@ -196,7 +196,7 @@ class MyController extends Controller
                 $myService->saveToDatabase($import);
             }
 
-//            return $this->redirectToRoute('invoices_list');
+            return $this->redirectToRoute('invoices_list');
         }
 
         return $this->render('views/editForm.html.twig', [

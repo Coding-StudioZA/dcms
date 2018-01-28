@@ -66,13 +66,24 @@ class MyService
         $addedInvoices = 0;
         $addedCompanies = 0;
         $companiesTemp = [];
-        $batchSize = 50;
+        $companiesTempOuter = [];
+        $invoicesTemp = [];
+        $companiesObj = [];
+        $batchSize = 500;
+
+        $companiesdb = $companies->findAll();
+
+        foreach ($companiesdb as $value) {
+            $companiesTempOuter[] = $value->getContractorNumber();
+        }
+
+        $this->logger->critical("debuk", ["comapniesObj" => $companiesObj, "companiesOuter" => $companiesTempOuter]);
 
         foreach ($spreadsheet as $key => $value) {
 
             if ($key != 1) {
 
-                if ($companies->findOneBy(["contractor_number" => $value["A"]]) == null && in_array($value["A"], $companiesTemp) == false) {
+                if (in_array($value["A"], $companiesTempOuter) == false && in_array($value["A"], $companiesTemp) == false) {
 
                     $company = new Companies();
                     $company->setCompanyName($value["B"]);
@@ -93,13 +104,24 @@ class MyService
 
         $this->dbm->flush();
 
+        $companiesdb = $companies->findAll();
+        $invoicesdb = $invoices->findAll();
+
+        foreach ($companiesdb as $value) {
+            $companiesObj[$value->getContractorNumber()] = $value;
+        }
+
+        foreach ($invoicesdb as $value){
+            $invoicesTemp[] = $value->getEvidenceNumber();
+        }
+
         foreach ($spreadsheet as $key => $value) {
 
-            if ($key != 1 && $invoices->findOneBy(["evidence_number" => $value["D"]]) == null) {
+            if ($key != 1 && in_array($value["D"], $invoicesTemp) == false) {
 
                 $dateTime = Date::excelToDateTimeObject($spreadsheet[$key]["C"], new \DateTimeZone("Europe/Warsaw"));
                 $invoice = new Invoices();
-                $invoice->setContractor($companies->findOneBy(["contractor_number" => $value["A"]]));
+                $invoice->setContractor($companiesObj[$value["A"]]);
                 $invoice->setDueDate($dateTime);
                 $invoice->setEvidenceNumber($value["D"]);
                 $invoice->setInvoiceNumber($value["E"]);
@@ -113,10 +135,12 @@ class MyService
                     $this->dbm->flush();
                     $this->dbm->clear();
                 }
+
             }
         }
 //        Flushuje mi zapisanie nazwy pliku excelowskiego do bazy.
 //        $this->dbm->flush();
+
 
         $session->getFlashBag()->add("notice", "Dodano ".$addedInvoices." faktur oraz ".$addedCompanies." firm!");
 

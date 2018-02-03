@@ -1,10 +1,29 @@
 <table>
     <tr>
-        <th>Nr Ewidencyjny</th><th>Nr Kontrahenta</th><th>Nazwa Firmy</th><th>Nr Dokumentu</th><th>Termin Zapłaty</th><th>Dni Przeterminowane</th><th>Kwota</th><th>Stan</th><th></th><th></th><th>Notatki</th>
+        <th>Nr Ewidencyjny</th>
+        <th>Nr Kontrahenta</th>
+        <th>Nazwa Firmy</th>
+        <th>Nr Dokumentu</th>
+        <th>Termin Zapłaty</th>
+        <th>Dni Przeterminowane</th>
+        <th>Kwota</th>
+        <th>Stan</th>
+        <th></th>
+        <th></th>
+        <th>Notatki</th>
     </tr>
     {% for invoice in invoices %}
         <tr>
-            <td>{{ invoice.evidencenumber }}</td><td>{{ invoice.contractor.contractornumber }}</td><td>{{ invoice.contractor.companyname }}</td><td>{{ invoice.invoicenumber }}</td><td>{{ invoice.duedate|date('d-m-Y') }}</td><td>{{ invoice.dueinterval }}</td><td>{{ invoice.amount }}</td><td>{{ invoice.state }}</td><td><a href="{{ path('invoices_list', {'id' : invoice.id}) }}">Edytuj</a></td><td><a href="{{ path('compose_email', {'id' : invoice.contractor.contractornumber}) }}">Mail</a></td><td>{{ invoice.notes }}</td>
+            <td>{{ invoice.evidencenumber }}</td>
+            <td>{{ invoice.contractor.contractornumber }}</td>
+            <td>{{ invoice.contractor.companyname }}</td>
+            <td>{{ invoice.invoicenumber }}</td>
+            <td>{{ invoice.duedate|date('d-m-Y') }}</td>
+            <td>{{ extradata['pastdue'][invoice.evidencenumber] }}</td>
+            <td>{{ invoice.amount }}</td><td>{{ invoice.state }}</td>
+            <td><a href="{{ path('invoices_list', {'id' : invoice.id}) }}">Edytuj</a></td>
+            <td><a href="{{ path('compose_email', {'id' : invoice.contractor.contractornumber}) }}">Mail</a></td>
+            <td>{{ invoice.notes }}</td>
         </tr>
     {% endfor %}
 </table>

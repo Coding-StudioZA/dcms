@@ -33,11 +33,6 @@ class Invoices
     private $due_date;
 
     /**
-     * @ORM\Column(type="smallint", options={"default": 0})
-     */
-    private $due_interval = 0;
-
-    /**
      * @ORM\Column(type="float")
      */
     private $amount;
@@ -73,22 +68,6 @@ class Invoices
     public function setContractor($contractor): void
     {
         $this->contractor = $contractor;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getDueInterval()
-    {
-        return $this->due_interval;
-    }
-
-    /**
-     * @param mixed $due_interval
-     */
-    public function setDueInterval($due_interval): void
-    {
-        $this->due_interval = $due_interval;
     }
 
     /**

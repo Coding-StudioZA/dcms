@@ -7,6 +7,7 @@ use App\Entity\Invoices;
 use App\Entity\Companies;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 use Symfony\Component\HttpFoundation\Session\Session;
+use Psr\Log\LoggerInterface;
 
 class MyService
 {
@@ -14,26 +15,30 @@ class MyService
     private $logger;
     private $dbm;
 
-    public function setUp($db, $logger = null)
+    public function __construct(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
+    public function setUp($db)
     {
         $this->db = $db;
-        $this->logger = $logger;
         $this->dbm = $db->getManager();
     }
 
-    private function getStateArray()
+    public function formatInvoicesResponse($dbresponse)
     {
-        return ['Niezapłacona', 'Windykowana', 'U Prawnika', 'Zapłacona', 'Sprawa sporna'];
-    }
+        $extradata = [];
+        $stany = ['Niezapłacona', 'Windykowana', 'U Prawnika', 'Zapłacona', 'Sprawa sporna'];
 
-    public function formatStatesResponse($dbResponse)
-    {
-        $stany = $this->getStateArray();
-        foreach ($dbResponse as $format) {
+        foreach ($dbresponse as $format) {
             $format->setState($stany[$format->getState()]);
+            $extradata['pastdue'][$format->getEvidenceNumber()] = date_diff($format->getDueDate(), new \DateTime("now"))->format("%a");
         }
 
-        return $dbResponse;
+        $this->logger->critical("oj", ["ok" =>$dbresponse]);
+
+        return [$dbresponse, $extradata];
     }
 
     public function spreadsheetToArray($filePath)
@@ -61,7 +66,6 @@ class MyService
     {
         $companies = $this->db->getRepository(Companies::class);
         $invoices = $this->db->getRepository(Invoices::class);
-        $today = new \DateTime("now");
         $session = new Session();
         $addedInvoices = 0;
         $addedCompanies = 0;
@@ -126,7 +130,6 @@ class MyService
                 $invoice->setEvidenceNumber($value["D"]);
                 $invoice->setInvoiceNumber($value["E"]);
                 $invoice->setAmount($value["O"]);
-                $invoice->setDueInterval(date_diff($dateTime, $today)->format("%a"));
                 $this->dbm->persist($invoice);
 
                 $addedInvoices++;

@@ -1,7 +1,12 @@
 <?php
 
+// Główne założenie
+// Aplikacja ma być zamknięta więc
+// jeżeli ktoś niepowołany uzyska dostęp do aplikacji to bez ingerencji w kod aplikacji otrzymuje informacje na których mu zależy.
+
 namespace App\Controller;
 
+use App\Entity\EmailTemplates;
 use App\Entity\InvociesImport;
 use App\Entity\Invoices;
 use App\Entity\Companies;
@@ -62,10 +67,11 @@ class MyController extends Controller
 
             $dbresponse = $this->getDoctrine()->getRepository(Invoices::class)->findAll();
 
-            $dbresponse = $myService->formatStatesResponse($dbresponse);
+            $return = $myService->formatInvoicesResponse($dbresponse);
 
             return $this->render('views/listInvoices.html.twig', [
-                'invoices' => $dbresponse,
+                'invoices' => $return[0],
+                'extradata' => $return[1],
                 ]);
         }
     }
@@ -120,9 +126,22 @@ class MyController extends Controller
     {
         $invoices = $this->getDoctrine()->getRepository(Invoices::class)->unpaidInvoices($id);
         $client = $this->getDoctrine()->getRepository(Companies::class)->findOneBy(['contractor_number' => $id]);
+        $template = $this->getDoctrine()->getRepository(EmailTemplates::class)->findAll();
+        $templates = [];
         $session = new Session();
 
         $invoices = $myService->formatStatesResponse($invoices);
+
+        foreach ($template as $tmpl) {
+            // takie rozwiązanie jest niedopuszczalne przy aplikacji "otwartej na świat"
+            $templates[$tmpl->getId()] = $tmpl->getTitle();
+        }
+
+        if(isset($_GET["tmpl"])){
+            $template = $templates[$_GET["tmpl"]];
+        } else {
+            $template = $templates[1];
+        }
 
         $form = $this->createFormBuilder()
             ->add('notatki', HiddenType::class, ['data' => $id, 'disabled' => true])
@@ -137,7 +156,7 @@ class MyController extends Controller
                     ->setFrom('kdWebDevelopment@kwb.pl')
                     ->setTo($client->getEmail())
                     ->setBody(
-                        $this->renderView('/emails/paymentAdvice.html.twig', [
+                        $this->renderView('/emails/'.$template.'.html.twig', [
                             'invoices' => $invoices,
                             'form' => $form->createView(),
                             'link' => false,
@@ -157,7 +176,7 @@ class MyController extends Controller
 
         } else {
 
-            return $this->render('/emails/paymentAdvice.html.twig', [
+            return $this->render('/emails/'.$template.'.html.twig', [
                 'invoices' => $invoices,
                 'form' => $form->createView(),
                 'link' => true,

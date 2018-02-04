@@ -47,7 +47,7 @@ class MyController extends Controller
 
                 $myService->saveToDatabase($task);
 
-                $session->getFlashBag()->add("notice", "Zmiany w ".$task->getInvoiceNumber()." zapisane!");
+                $session->getFlashBag()->add('notice', 'Zmiany w '.$task->getInvoiceNumber().' zapisane!');
 
                 return $this->redirectToRoute('invoices_list');
             }
@@ -91,7 +91,7 @@ class MyController extends Controller
 
                 $myService->saveToDatabase($task);
 
-                $session->getFlashBag()->add("notice", "Zmiany w ".$task->getCompanyName()." zapisane!");
+                $session->getFlashBag()->add('notice', 'Zmiany w '.$task->getCompanyName().' zapisane!');
 
                 return $this->redirectToRoute('companies_list');
             }
@@ -129,11 +129,13 @@ class MyController extends Controller
             $templates[$tmpl->getId()] = $tmpl->getTitle();
         }
 
-        if(isset($_GET["tmpl"])){
-            $template = $templates[$_GET["tmpl"]];
+        if(isset($_GET['tmpl'])){
+            $template = $templates[$_GET['tmpl']];
         } else {
             $template = $templates[1];
         }
+
+        $session->set('tmpl', $template);
 
         $form = $this->createFormBuilder()
             ->add('notatki', HiddenType::class, ['data' => $id, 'disabled' => true])
@@ -148,7 +150,7 @@ class MyController extends Controller
                     ->setFrom('kdWebDevelopment@kwb.pl')
                     ->setTo($client->getEmail())
                     ->setBody(
-                        $this->renderView('/emails/'.$template.'.html.twig', [
+                        $this->renderView('/emails/'.$session->get('tmpl').'.html.twig', [
                             'invoices' => $invoices,
                             'form' => $form->createView(),
                             'link' => false,
@@ -158,11 +160,13 @@ class MyController extends Controller
 
                 $mailer->send($message);
 
-                $session->getFlashBag()->add("notice", "Mail do " . $client->getCompanyName() . " wysłany!");
+                $session->getFlashBag()->add('notice', 'Mail do ' . $client->getCompanyName() . ' wysłany!');
 
             } else {
-                $session->getFlashBag()->add("notice", "Brak adresu e-mail do ". $client->getCompanyName());
+                $session->getFlashBag()->add('notice', 'Brak adresu e-mail do '. $client->getCompanyName());
             }
+
+            $session->remove('tmpl');
 
             return $this->redirectToRoute('invoices_list');
 
@@ -179,7 +183,7 @@ class MyController extends Controller
     /**
      * @Route("/import", name="import_invoices")
      */
-    public function import(Request $request, MyService $myService, LoggerInterface $logger)
+    public function import(Request $request, MyService $myService)
     {
         $import = new InvociesImport();
 
@@ -196,7 +200,7 @@ class MyController extends Controller
             $import->setAging($uploader->upload($file));
             $import->setImportTime(new \DateTime('now'));
 
-            $filePath = $this->getParameter('imports_dir')."/".$import->getAging();
+            $filePath = $this->getParameter('imports_dir').'/'.$import->getAging();
             $spreadsheet = $myService->spreadsheetToArray($filePath);
 
             if ($myService->importAging($spreadsheet) == 0) {
@@ -220,6 +224,6 @@ class MyController extends Controller
      */
     public function test(MyService $myService, LoggerInterface $logger, ValidatorInterface $validator){
 
-        return $this->render("base.html.twig");
+        return $this->render('base.html.twig');
     }
 }

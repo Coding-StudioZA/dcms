@@ -3,6 +3,7 @@
         <th>Nr Ewidencyjny</th>
         <th>Nr Kontrahenta</th>
         <th>Nazwa Firmy</th>
+        <th></th>
         <th>Nr Dokumentu</th>
         <th>Termin Zapłaty</th>
         <th>Dni Przeterminowane</th>
@@ -17,6 +18,7 @@
             <td>{{ invoice.evidencenumber }}</td>
             <td>{{ invoice.contractor.contractornumber }}</td>
             <td>{{ invoice.contractor.companyname }}</td>
+            <td><a href="{{ path('companies_list', {'id' : invoice.contractor.id}) }}">Edytuj</a></td>
             <td>{{ invoice.invoicenumber }}</td>
             <td>{{ invoice.duedate|date('d-m-Y') }}</td>
             <td>{{ extradata['pastdue'][invoice.evidencenumber] }}</td>

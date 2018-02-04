@@ -1,8 +1,7 @@
 {% extends 'base.html.twig' %}
 {% block body %}
     <h1>Hej TY!</h1>
-    <p>Masz u nas długi lepiej się spłać albo będzie wizyta Mariusza. A Mariusz lubi herbatę ale tylko zieloną.</p>
-    <p>A tutaj masz listę przeterminowanych płatności żebyś nie musiał Mariuszowi palić głupa że nic nie wiedziałeś.</p>
+    <p>To twoje ostatnie ostrzeżenie albo ostatnie tchnienie!</p>
     {{ include('emails/parts/invoicetable.html.twig') }}
     {% if link == true %}
         {{ form_start(form) }}

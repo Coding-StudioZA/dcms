@@ -13,8 +13,8 @@ use Psr\Log\LoggerInterface;
 class MyService
 {
     private $db;
-    private $logger;
     private $dbm;
+    private $logger;
 
     public function __construct(LoggerInterface $logger, ManagerRegistry $doctrine)
     {
@@ -33,9 +33,9 @@ class MyService
             $format->setState($stany[$format->getState()]);
 
             if (strtotime($format->getDueDate()->format('Y-m-d')) > strtotime($now->format('Y-m-d'))) {
-                $extradata['pastdue'][$format->getEvidenceNumber()] = "W terminie";
+                $extradata['pastdue'][$format->getEvidenceNumber()] = 'W terminie';
             } else {
-                $extradata['pastdue'][$format->getEvidenceNumber()] = date_diff($format->getDueDate(), $now)->format("%a");
+                $extradata['pastdue'][$format->getEvidenceNumber()] = date_diff($format->getDueDate(), $now)->format('%a');
             }
         }
 
@@ -84,17 +84,16 @@ class MyService
             $companiesTempOuter[] = $value->getContractorNumber();
         }
 
-        $this->logger->critical("debuk", ["comapniesObj" => $companiesObj, "companiesOuter" => $companiesTempOuter]);
 
         foreach ($spreadsheet as $key => $value) {
 
             if ($key != 1) {
 
-                if (in_array($value["A"], $companiesTempOuter) == false && in_array($value["A"], $companiesTemp) == false) {
+                if (in_array($value['A'], $companiesTempOuter) == false && in_array($value['A'], $companiesTemp) == false) {
 
                     $company = new Companies();
-                    $company->setCompanyName($value["B"]);
-                    $company->setContractorNumber($value["A"]);
+                    $company->setCompanyName($value['B']);
+                    $company->setContractorNumber($value['A']);
                     $this->dbm->persist($company);
 
                     $addedCompanies++;
@@ -105,7 +104,7 @@ class MyService
                     }
                 }
 
-                $companiesTemp[] = $value["A"];
+                $companiesTemp[] = $value['A'];
             }
         }
 
@@ -124,17 +123,17 @@ class MyService
 
         foreach ($spreadsheet as $key => $value) {
 
-            $invoicesFile[] = $value["D"];
+            $invoicesFile[] = $value['D'];
 
-            if ($key != 1 && in_array($value["D"], $invoicesTemp) == false) {
+            if ($key != 1 && in_array($value['D'], $invoicesTemp) == false) {
 
-                $dateTime = Date::excelToDateTimeObject($spreadsheet[$key]["C"], new \DateTimeZone("Europe/Warsaw"));
+                $dateTime = Date::excelToDateTimeObject($spreadsheet[$key]['C'], new \DateTimeZone('Europe/Warsaw'));
                 $invoice = new Invoices();
-                $invoice->setContractor($companiesObj[$value["A"]]);
+                $invoice->setContractor($companiesObj[$value['A']]);
                 $invoice->setDueDate($dateTime);
-                $invoice->setEvidenceNumber($value["D"]);
-                $invoice->setInvoiceNumber($value["E"]);
-                $invoice->setAmount($value["O"]);
+                $invoice->setEvidenceNumber($value['D']);
+                $invoice->setInvoiceNumber($value['E']);
+                $invoice->setAmount($value['O']);
                 $this->dbm->persist($invoice);
 
                 $addedInvoices++;
@@ -158,7 +157,7 @@ class MyService
 //        $this->dbm->flush();
 
 
-        $session->getFlashBag()->add("notice", "Dodano ".$addedInvoices." faktur oraz ".$addedCompanies." firm! Usunięto ".$subtractedInvoices." faktur.");
+        $session->getFlashBag()->add('notice', 'Dodano '.$addedInvoices.' faktur oraz '.$addedCompanies.' firm! Usunięto '.$subtractedInvoices.' faktur.');
 
         return $addedInvoices+$addedCompanies+$subtractedInvoices;
     }

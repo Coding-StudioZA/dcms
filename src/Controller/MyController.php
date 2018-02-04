@@ -1,9 +1,5 @@
 <?php
 
-// Główne założenie
-// Aplikacja ma być zamknięta więc
-// jeżeli ktoś niepowołany uzyska dostęp do aplikacji to bez ingerencji w kod aplikacji otrzymuje informacje na których mu zależy.
-
 namespace App\Controller;
 
 use App\Entity\EmailTemplates;
@@ -28,7 +24,6 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
-
 class MyController extends Controller
 {
     /**
@@ -37,7 +32,6 @@ class MyController extends Controller
     public function invoicesList($id = null, MyService $myService, Request $request)
     {
         $session = new Session();
-        $myService->setUp($this->getDoctrine());
 
         if ($id) {
 
@@ -82,7 +76,6 @@ class MyController extends Controller
     public function editEntry($id = null, MyService $myService, Request $request)
     {
         $session = new Session();
-        $myService->setUp($this->getDoctrine());
 
         if ($id) {
 
@@ -130,10 +123,9 @@ class MyController extends Controller
         $templates = [];
         $session = new Session();
 
-        $invoices = $myService->formatStatesResponse($invoices);
+        $invoices = ($myService->formatInvoicesResponse($invoices))[0];
 
         foreach ($template as $tmpl) {
-            // takie rozwiązanie jest niedopuszczalne przy aplikacji "otwartej na świat"
             $templates[$tmpl->getId()] = $tmpl->getTitle();
         }
 
@@ -190,7 +182,6 @@ class MyController extends Controller
     public function import(Request $request, MyService $myService, LoggerInterface $logger)
     {
         $import = new InvociesImport();
-        $myService->setUp($this->getDoctrine(), $logger);
 
         $form = $this->createForm(InvoicesUpload::class, $import);
 

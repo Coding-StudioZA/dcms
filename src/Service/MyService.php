@@ -6,6 +6,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use App\Entity\Invoices;
 use App\Entity\Companies;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
+use Doctrine\Common\Persistence\ManagerRegistry;
 use Symfony\Component\HttpFoundation\Session\Session;
 use Psr\Log\LoggerInterface;
 
@@ -15,28 +16,28 @@ class MyService
     private $logger;
     private $dbm;
 
-    public function __construct(LoggerInterface $logger)
+    public function __construct(LoggerInterface $logger, ManagerRegistry $doctrine)
     {
         $this->logger = $logger;
-    }
-
-    public function setUp($db)
-    {
-        $this->db = $db;
-        $this->dbm = $db->getManager();
+        $this->db = $doctrine;
+        $this->dbm = $doctrine->getManager();
     }
 
     public function formatInvoicesResponse($dbresponse)
     {
         $extradata = [];
         $stany = ['Niezapłacona', 'Windykowana', 'U Prawnika', 'Zapłacona', 'Sprawa sporna'];
+        $now = new \DateTime("now");
 
         foreach ($dbresponse as $format) {
             $format->setState($stany[$format->getState()]);
-            $extradata['pastdue'][$format->getEvidenceNumber()] = date_diff($format->getDueDate(), new \DateTime("now"))->format("%a");
-        }
 
-        $this->logger->critical("oj", ["ok" =>$dbresponse]);
+            if (strtotime($format->getDueDate()->format('Y-m-d')) > strtotime($now->format('Y-m-d'))) {
+                $extradata['pastdue'][$format->getEvidenceNumber()] = "W terminie";
+            } else {
+                $extradata['pastdue'][$format->getEvidenceNumber()] = date_diff($format->getDueDate(), $now)->format("%a");
+            }
+        }
 
         return [$dbresponse, $extradata];
     }
@@ -68,10 +69,12 @@ class MyService
         $invoices = $this->db->getRepository(Invoices::class);
         $session = new Session();
         $addedInvoices = 0;
+        $subtractedInvoices = 0;
         $addedCompanies = 0;
         $companiesTemp = [];
         $companiesTempOuter = [];
         $invoicesTemp = [];
+        $invoicesFile = [];
         $companiesObj = [];
         $batchSize = 500;
 
@@ -121,6 +124,8 @@ class MyService
 
         foreach ($spreadsheet as $key => $value) {
 
+            $invoicesFile[] = $value["D"];
+
             if ($key != 1 && in_array($value["D"], $invoicesTemp) == false) {
 
                 $dateTime = Date::excelToDateTimeObject($spreadsheet[$key]["C"], new \DateTimeZone("Europe/Warsaw"));
@@ -141,13 +146,21 @@ class MyService
 
             }
         }
+
+        foreach ($invoicesdb as $value){
+            if (!in_array($value->getEvidenceNumber(), $invoicesFile)) {
+                $this->dbm->remove($value);
+                $subtractedInvoices++;
+            }
+        }
+
 //        Flushuje mi zapisanie nazwy pliku excelowskiego do bazy.
 //        $this->dbm->flush();
 
 
-        $session->getFlashBag()->add("notice", "Dodano ".$addedInvoices." faktur oraz ".$addedCompanies." firm!");
+        $session->getFlashBag()->add("notice", "Dodano ".$addedInvoices." faktur oraz ".$addedCompanies." firm! Usunięto ".$subtractedInvoices." faktur.");
 
-        return $addedInvoices+$addedCompanies;
+        return $addedInvoices+$addedCompanies+$subtractedInvoices;
     }
 
 }
